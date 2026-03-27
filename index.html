@@ -54,9 +54,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
 <div class="state" id="confirmState"><div class="card">
 <h2 id="greeting">Confirm Your Switch to Weekly</h2>
-<p>You are about to switch from bi-weekly to <strong>weekly pool service</strong>. Here is a summary of your new rate:</p>
+<p id="introText">You are about to switch from bi-weekly to <strong>weekly pool service</strong>. Here is a summary of your new rate:</p>
+<div id="rateSection">
 <div class="rate-comparison"><div><div class="rate-old" id="oldRate">$75</div><div class="rate-label">Bi-Weekly</div></div><div class="rate-arrow">&rarr;</div><div><div class="rate-new" id="newRate">$50</div><div class="rate-label">Weekly</div></div></div>
 <p style="text-align:center;font-size:.85rem;color:#6b7280">Labor rate per visit &mdash; chemicals billed separately</p>
+</div>
 <div class="benefits"><h3>What You Get with Weekly Service</h3><ul>
 <li>Consistently clear water all season</li>
 <li>Green-Free Guarantee &mdash; if it turns green, recovery labor is on us</li>
@@ -138,8 +140,14 @@ function initPage() {
   }
   document.getElementById("companyName").textContent = oi.displayName;
   document.getElementById("greeting").textContent = "Hi " + params.name + ", Confirm Your Switch";
-  if (params.oldrate) document.getElementById("oldRate").textContent = formatRate(params.oldrate);
-  document.getElementById("newRate").textContent = formatRate(params.rate);
+  var samePrice = params.oldrate && params.oldrate === params.rate;
+  if (samePrice) {
+    document.getElementById("rateSection").style.display = "none";
+    document.getElementById("introText").innerHTML = "You are about to switch from bi-weekly to <strong>weekly pool service</strong>.";
+  } else {
+    if (params.oldrate) document.getElementById("oldRate").textContent = formatRate(params.oldrate);
+    document.getElementById("newRate").textContent = formatRate(params.rate);
+  }
   var ch = 'Questions? Call <a href="tel:' + oi.phone + '">' + oi.phone + '</a> or email <a href="mailto:' + oi.email + '">' + oi.email + '</a>';
   ["successContact", "errorContact"].forEach(function(id) {
     var el = document.getElementById(id);
@@ -163,7 +171,12 @@ async function submitConfirmation() {
     var d = await r.json();
     if (r.ok && d.success) {
       window._submitted = true;
-      document.getElementById("successRate").textContent = formatRate(p.rate) + "/visit (plus chemicals)";
+      var sp = p.oldrate && p.oldrate === p.rate;
+      if (sp) {
+        document.getElementById("successRate").parentElement.parentElement.style.display = "none";
+      } else {
+        document.getElementById("successRate").textContent = formatRate(p.rate) + "/visit (plus chemicals)";
+      }
       showState("successState");
     } else {
       throw new Error(d.error || "Failed");
